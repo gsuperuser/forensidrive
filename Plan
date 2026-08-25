@@ -1,0 +1,535 @@
+You are developing a prototype called ForensiDrive.
+
+ForensiDrive is NOT intended to be a conventional Linux desktop application.
+
+It is a graphical control/orchestration layer designed to run on top of SystemRescue Linux when booted from a live USB/ISO.
+
+The eventual goal is:
+
+POWER ON
+→ SystemRescue boot
+→ graphical environment
+→ ForensiDrive automatically starts
+→ ForensiDrive becomes the primary user-facing interface
+
+The underlying SystemRescue environment remains responsible for Linux, drivers, storage access, forensic utilities, recovery utilities, filesystem utilities, and destructive low-level operations.
+
+Do NOT implement a custom display server, X server, Wayland compositor, kernel, window manager, or replacement Linux environment.
+
+Instead, build the application so that it can eventually be installed into a SystemRescue filesystem such as:
+
+/usr/local/forensidrive/
+
+and automatically launched by SystemRescue graphical autostart.
+
+==================================================
+CURRENT DEVELOPMENT ENVIRONMENT
+==================================================
+
+The application is currently being developed directly inside a booted SystemRescue graphical environment.
+
+Python is available.
+
+Tkinter works.
+
+PyQt6 is NOT installed and must NOT be used.
+
+Use Python 3 and Tkinter.
+
+Do not require pip packages unless absolutely unavoidable.
+
+Prefer standard Python libraries and command-line utilities already provided by SystemRescue.
+
+==================================================
+PROJECT STRUCTURE
+==================================================
+
+Create exactly this structure:
+
+ForensiDrive/
+│
+├── app/
+│   ├── main.py
+│   ├── ui/
+│   │   ├── __init__.py
+│   │   ├── app_window.py
+│   │   ├── navigation.py
+│   │   ├── dialogs.py
+│   │   ├── notifications.py
+│   │   ├── widgets.py
+│   │   └── theme.py
+│   │
+│   ├── modules/
+│   │   ├── __init__.py
+│   │   ├── dashboard/
+│   │   │   ├── __init__.py
+│   │   │   └── dashboard.py
+│   │   │
+│   │   ├── inspection/
+│   │   │   ├── __init__.py
+│   │   │   ├── inspection.py
+│   │   │   ├── drive_details.py
+│   │   │   └── partition_details.py
+│   │   │
+│   │   ├── recovery/
+│   │   │   ├── __init__.py
+│   │   │   ├── recovery.py
+│   │   │   ├── recovery_tools.py
+│   │   │   ├── recovery_scan.py
+│   │   │   └── recovery_results.py
+│   │   │
+│   │   └── erasure/
+│   │       ├── __init__.py
+│   │       ├── erasure.py
+│   │       ├── erase_methods.py
+│   │       ├── confirmation.py
+│   │       └── erase_progress.py
+│   │
+│   ├── core/
+│   │   ├── __init__.py
+│   │   ├── storage.py
+│   │   ├── partitions.py
+│   │   ├── filesystem.py
+│   │   ├── commands.py
+│   │   ├── process.py
+│   │   ├── system.py
+│   │   └── errors.py
+│   │
+│   ├── integrations/
+│   │   ├── __init__.py
+│   │   ├── systemrescue.py
+│   │   ├── recovery_tools.py
+│   │   ├── erasure_tools.py
+│   │   └── filesystem_tools.py
+│   │
+│   └── models/
+│       ├── __init__.py
+│       ├── drive.py
+│       ├── partition.py
+│       └── operation.py
+│
+├── systemrescue/
+│   ├── config/
+│   │   └── forensidrive.yaml
+│   │
+│   └── autostart/
+│       └── forensidrive.desktop
+│
+├── customization/
+│   ├── recipe/
+│   ├── build/
+│   └── scripts/
+│
+├── tests/
+│   ├── test_storage.py
+│   ├── test_inspection.py
+│   ├── test_recovery.py
+│   └── test_erasure.py
+│
+├── docs/
+│   ├── architecture.md
+│   ├── systemrescue.md
+│   └── tools.md
+│
+└── README.md
+
+==================================================
+FUNCTIONAL SCOPE
+==================================================
+
+Implement ONLY these modules now:
+
+1. Dashboard
+2. Drive Inspection
+3. Recovery
+4. Erasure
+5. SystemRescue integration layer
+6. Basic operation status/error handling
+
+Do NOT implement:
+
+- Audit
+- Audit authentication
+- Password protection
+- Encrypted audit partition
+- Encrypted storage
+- Audit database
+- Audit reports
+- Forensic evidence database
+- User accounts
+- Persistent credentials
+
+Those will be implemented later.
+
+==================================================
+DASHBOARD
+==================================================
+
+The dashboard is the first screen.
+
+It must provide four major actions:
+
+[ Recover Files ]
+
+[ Erase Data ]
+
+[ Inspect Drive ]
+
+[ System Information ]
+
+The interface should be extremely simple for a non-technical/native user.
+
+Avoid technical terminology wherever possible.
+
+For example:
+
+Instead of:
+
+"Select block device"
+
+say:
+
+"Choose the drive you want to work with."
+
+Instead of:
+
+"Unmount filesystem"
+
+say:
+
+"Close the drive before continuing."
+
+Instead of:
+
+"Operation completed with exit code 0"
+
+say:
+
+"The operation completed successfully."
+
+Instead of:
+
+"Command failed"
+
+say:
+
+"We couldn't complete this operation."
+
+Technical details can be available through a "Technical details" expandable area.
+
+==================================================
+INSPECTION
+==================================================
+
+Inspection must detect physical storage devices.
+
+Use SystemRescue/Linux tools such as:
+
+lsblk
+
+Prefer machine-readable output such as:
+
+lsblk -J
+
+Do not parse human-formatted terminal output if structured output is available.
+
+Display:
+
+- drive name
+- /dev path
+- model
+- vendor
+- capacity
+- removable status
+- read-only status
+- partitions
+- filesystem
+- mount point
+
+The user should never need to type /dev/sda manually.
+
+The GUI should identify drives visually.
+
+Example:
+
+Samsung SSD
+476 GB
+/dev/nvme0n1
+
+[ View Details ]
+
+==================================================
+RECOVERY
+==================================================
+
+Recovery is an orchestration layer.
+
+Do NOT implement a new recovery algorithm.
+
+Use recovery/forensic utilities already available in SystemRescue where appropriate.
+
+Before relying on a specific command, check whether it exists on the running SystemRescue environment.
+
+The architecture should allow tools to be changed later without rewriting the GUI.
+
+Separate:
+
+GUI
+→ recovery workflow
+→ recovery tool adapter
+→ SystemRescue command
+
+The GUI should guide a naive user through:
+
+1. Choose drive
+2. Choose what they want to recover
+3. Choose destination
+4. Start recovery
+5. Display progress/output
+6. Display a simple result
+
+Translate technical errors into simple explanations.
+
+==================================================
+ERASURE
+==================================================
+
+Erasure is potentially destructive.
+
+Do NOT create an unsafe one-click erase operation.
+
+The workflow must be:
+
+1. Select drive
+2. Display exact drive identity
+3. Display capacity
+4. Display model
+5. Display selected device again
+6. Explain that the operation can permanently remove data
+7. Require explicit confirmation
+8. Only then run the selected erasure operation
+
+Use existing SystemRescue/Linux utilities where appropriate.
+
+Potential tools may include utilities such as:
+
+wipefs
+blkdiscard
+shred
+
+BUT:
+
+Do not blindly assume a particular tool or option exists.
+
+Detect command availability first.
+
+Do not claim an operation is secure merely because a command executed.
+
+The tool integration layer must isolate command construction from the GUI.
+
+==================================================
+SYSTEM INFORMATION
+==================================================
+
+Provide basic information useful to the user:
+
+- SystemRescue version
+- Linux kernel version
+- CPU architecture
+- available RAM
+- boot mode if easily detectable
+- application version
+
+Use existing Linux commands or files.
+
+Keep technical details secondary.
+
+==================================================
+USER EXPERIENCE
+==================================================
+
+The application is designed for users who may not understand:
+
+- Linux
+- partitions
+- block devices
+- filesystems
+- mount points
+- command-line tools
+- forensic utilities
+
+Therefore the GUI must translate technical concepts.
+
+Use language such as:
+
+"Storage drive"
+instead of
+"block device"
+
+"Drive"
+instead of
+"device node"
+
+"Files currently accessible"
+instead of
+"mounted filesystem"
+
+"Choose where recovered files should be saved"
+instead of
+"recovery destination"
+
+Technical information can still be shown in a secondary details panel.
+
+==================================================
+ERROR HANDLING
+==================================================
+
+Never expose raw subprocess errors as the primary message.
+
+For example, do NOT show:
+
+"subprocess.CalledProcessError: Command [...] returned non-zero exit status 1"
+
+Instead:
+
+"We couldn't inspect this drive."
+
+Then provide:
+
+"Technical details"
+
+with the raw error underneath.
+
+All subprocess execution must:
+
+- avoid shell=True unless absolutely necessary
+- pass command arguments as a list
+- capture stdout/stderr
+- capture return codes
+- handle missing commands
+- handle permission failures
+- handle device disappearing
+- handle user cancellation
+- handle timeout where appropriate
+
+==================================================
+SYSTEMRESCUE COMPATIBILITY
+==================================================
+
+The code must be designed for eventual installation into:
+
+/usr/local/forensidrive/
+
+Do not assume the application is being run from the user's home directory.
+
+Do not hard-code:
+
+/home/user/ForensiDrive
+
+Use application-relative paths or a configurable installation root.
+
+Do not assume a normal full Linux installation.
+
+SystemRescue is a live environment.
+
+Avoid dependencies that require:
+
+- internet
+- package installation at runtime
+- user home configuration
+- systemd services
+- Docker
+- databases
+- external servers
+
+The application should work offline.
+
+==================================================
+GUI BEHAVIOR
+==================================================
+
+The application should behave like the primary interface.
+
+Use a single main window.
+
+Prefer full-screen or near-full-screen operation.
+
+Do not create unnecessary terminal windows.
+
+Do not make the user interact with the XFCE desktop for normal operations.
+
+However, do not attempt to replace XFCE/Xorg.
+
+ForensiDrive is a user-facing shell-like application running on top of the SystemRescue graphical environment.
+
+==================================================
+SYSTEMRESCUE AUTOSTART
+==================================================
+
+Create the configuration placeholders:
+
+systemrescue/config/forensidrive.yaml
+
+systemrescue/autostart/forensidrive.desktop
+
+These should be designed around SystemRescue's supported graphical autostart/configuration mechanisms.
+
+Do not invent undocumented SystemRescue configuration keys.
+
+If an exact SystemRescue configuration option is uncertain, clearly mark it as TODO rather than inventing it.
+
+The eventual desired behavior is:
+
+SystemRescue boots
+→ graphical environment starts
+→ ForensiDrive launches automatically
+→ Dashboard is displayed
+
+==================================================
+IMPORTANT ARCHITECTURAL RULE
+==================================================
+
+Do not create a conventional "Python desktop app" architecture that assumes a normal installed Linux desktop.
+
+The application must be portable into a SystemRescue live filesystem.
+
+Separate:
+
+UI
+Core Linux/storage operations
+SystemRescue integration
+Tool adapters
+Data models
+
+The GUI must never directly contain large subprocess command implementations.
+
+==================================================
+OUTPUT REQUIREMENT
+==================================================
+
+Generate every requested file completely.
+
+Do not provide partial snippets.
+
+Do not say "add the rest yourself."
+
+Every Python file must be syntactically valid.
+
+Every import must correspond to a file in the project.
+
+Make the application runnable from the project root with:
+
+python3 app/main.py
+
+If an operation/tool cannot safely be implemented without knowing the exact SystemRescue version/tool availability, create a proper adapter/detection mechanism rather than guessing.
+
+At the end provide:
+
+1. Complete directory tree
+2. Complete contents of every file
+3. How to run it inside SystemRescue
+4. How to test Inspection
+5. How to test Recovery without destroying data
+6. How to test Erasure safely using a disposable test device
+7. Which parts are ready for eventual ISO integration
+8. Which parts are intentionally deferred
