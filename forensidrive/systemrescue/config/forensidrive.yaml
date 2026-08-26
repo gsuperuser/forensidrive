@@ -1,0 +1,31 @@
+# ForensiDrive Configuration for SystemRescue
+# This file should be placed in the SystemRescue configuration area
+# e.g., /usr/local/forensidrive/config/forensidrive.yaml
+
+# Application settings
+app:
+  name: ForensiDrive
+  version: 0.1.0-dev
+  install_path: /usr/local/forensidrive
+  log_level: info
+
+# Display settings
+display:
+  fullscreen: true
+  theme: dark
+
+# Safety settings
+safety:
+  # Prevent operations on boot device
+  protect_boot_device: true
+  # Require confirmation for destructive operations
+  require_confirmation: true
+  # Default mount mode
+  default_mount_mode: read-only
+
+# TODO: SystemRescue-specific configuration
+# The following settings depend on the specific SystemRescue version
+# and its supported configuration mechanisms
+# systemrescue:
+#   autostart: true
+#   hide_desktop: false

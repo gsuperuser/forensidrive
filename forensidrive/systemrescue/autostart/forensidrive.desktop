@@ -1,0 +1,16 @@
+[Desktop Entry]
+Type=Application
+Name=ForensiDrive
+Comment=Forensic Drive Recovery and Erasure Tool
+Exec=/usr/bin/python3 /usr/local/forensidrive/app/main.py
+Path=/usr/local/forensidrive
+Icon=drive-harddisk
+Terminal=false
+StartupNotify=true
+Categories=System;Utility;
+
+# TODO: Verify the correct autostart directory for SystemRescue
+# Possible locations:
+#   ~/.config/autostart/forensidrive.desktop
+#   /etc/xdg/autostart/forensidrive.desktop  
+# The exact mechanism depends on SystemRescue's desktop environment configuration
